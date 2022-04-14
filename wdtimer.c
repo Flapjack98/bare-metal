@@ -35,8 +35,3 @@ void Watchdog_hit(void)
 
 	WatchdogTimerTriggerSet(SOC_WDT_1_REGS, triggerCounter);
 }
-
-void Watchdog_hit(void)
-{
-    
-}

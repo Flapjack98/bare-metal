@@ -20,7 +20,7 @@ void Joystick_init(void)
 
 void Joystick_setDirection(const char *newDirection)
 {
-	s_speed = newSpeed;
+	s_direction = newDirection;
 }
 
 void Joystick_notifyOnTimeIsr(void)

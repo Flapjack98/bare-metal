@@ -55,7 +55,7 @@ static void doBackgroundSerialWork(void)
 		} else if (s_rxByte >= '0' && s_rxByte <= '9'){
 			Led_setSpeed(s_rxByte);
 		} else if (s_rxByte == 'x') {
-			Watchdog_stopHit();
+			//Watchdog_stopHit();
 		} else {
 			ConsoleUtilsPrintf("\nMust enter valid command\n");
 			displayHelpMenu();
@@ -75,7 +75,6 @@ int main(void)
 	Serial_init(serialRxIsrCallback);
 	Timer_init(TIMER_PERIOD_MILLISECONDS);
 	Watchdog_init();
-	FakeTyper_init();
 
 	// Setup callbacks from hardware abstraction modules to application:
 	Serial_setRxIsrCallback(serialRxIsrCallback);
@@ -86,7 +85,7 @@ int main(void)
 	ConsoleUtilsPrintf("   by Catherine and Noel\n");
 	ConsoleUtilsPrintf("------------------------\n");
 	// Display reset sources
-	char *resetSource = readFromResetSource();
+	//char *resetSource = readFromResetSource();
 
 	// Main loop:
 	while(1) {
