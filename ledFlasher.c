@@ -16,6 +16,7 @@ static const unsigned int DEFAULT_LED_SPEED = 0; // Slow speed by default
 static const unsigned int DEFAULT_LIT_LED_POSITION = 0; // start at LED0
 
 const unsigned int MAX_SPEED = 9;
+const unsigned int MIN_SPEED = 0;
 
 const unsigned int NUM_LEDS = 4;
 
@@ -114,6 +115,20 @@ void LedFlasher_setSpeed(unsigned int newSpeed)
 {
 	s_speed = newSpeed;
 	s_flashTimePeriod = LedFlasher_calcFlashTimePeriod(s_speed);
+}
+
+void LedFlasher_decreaseSpeed(void)
+{
+	if (s_speed > MIN_SPEED) {
+		LedFlasher_setSpeed(s_speed - 1);
+	}
+}
+
+void LedFlasher_increaseSpeed(void)
+{
+	if (s_speed < MAX_SPEED) {
+		LedFlasher_setSpeed(s_speed + 1);
+	}
 }
 
 static unsigned int LedFlasher_calcFlashTimePeriod(unsigned int speed)

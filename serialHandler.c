@@ -1,6 +1,6 @@
 /* The Serial Handler module handles the serial port logic for the
  * Led flasher bare metal application, and depends on the general
- * serial module. */
+ * serial module. The serial module must be initialized before. */
 
 #include "ledFlasher.h"
 #include "wdtimer.h"
