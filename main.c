@@ -10,6 +10,7 @@
 #include "wdtimer.h"
 
 // My application's modules
+#include "joystick.h"
 #include "led.h"
 
 
@@ -93,6 +94,7 @@ int main(void)
 		// Handle background processing
 		doBackgroundSerialWork();
 		Led_doBackgroundWork();
+		Joystick_doBackgroundWork();
 
 		// Timer ISR signals intermittent background activity.
 		if(Timer_isIsrFlagSet()) {
