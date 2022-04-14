@@ -23,10 +23,10 @@ static const int TIMER_PERIOD_MILLISECONDS = 10;
  ******************************************************************************/
 
 /******************************************************************************
- **              Functions
+ **             Static Functions
  ******************************************************************************/
 
-void displayHelpMenu()
+static void displayHelpMenu()
 {
     ConsoleUtilsPrintf(
 		"Commands:\n \
@@ -37,7 +37,15 @@ void displayHelpMenu()
 	);
 }
 
+static void displayResetSources(void)
+{
+	char *resetSource = readFromResetSource();
+}
 
+static void readFromResetSource(void)
+{
+
+}
 
 /******************************************************************************
  **              SERIAL PORT HANDLING
@@ -85,7 +93,7 @@ int main(void)
 	ConsoleUtilsPrintf("   by Catherine and Noel\n");
 	ConsoleUtilsPrintf("------------------------\n");
 	// Display reset sources
-	//char *resetSource = readFromResetSource();
+	displayResetSources();
 
 	// Main loop:
 	while(1) {
