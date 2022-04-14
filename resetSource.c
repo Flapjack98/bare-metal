@@ -38,12 +38,16 @@ static ResetEvent ResetEventInfo[] = {
  **                Private Functions
  *****************************************************************************/
 
+// Clears the reset event bits in the reset source register by setting the 
+// passed reset event bit to a 1. 
 static void ResetSource_clearResetEventBit(int resetEventBit)
 {
     int resetEventMask = (1<<resetEventBit);
     HWREG(RESET_SOURCE_REGISTER_ADDRESS) |= resetEventMask;
 }
 
+// Reads from the reset source register to determin which reset source events
+// have neem triggered. 
 static char *ResetSource_readFromResetSource(void)
 {
     int i;
