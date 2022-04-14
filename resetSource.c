@@ -18,7 +18,9 @@ static const unsigned int RESET_SOURCE_REGISTER_ADDRESS = (0x44E00F08); // (REGI
 static const int MAX_BUFFER_SIZE = 1024;
 static const int NUMBER_RESET_EVENT_TYPES = 5;
 
-// Reset events
+/*****************************************************************************
+ **                Reset Source Event Stuct and Info List
+ *****************************************************************************/
 typedef struct ResetEvent {
     int bit;
     char *resetEventType;
@@ -31,6 +33,10 @@ static ResetEvent ResetEventInfo[] = {
     {1, "GLobal Warm Software"},
     {0, "Power-on (cold)"}
 };
+
+/*****************************************************************************
+ **                Private Functions
+ *****************************************************************************/
 
 static void ResetSource_clearResetEventBit(int resetEventBit)
 {
@@ -59,6 +65,10 @@ static char *ResetSource_readFromResetSource(void)
 
     return resetSourceListString;
 }
+
+/*****************************************************************************
+ **                Public Functions
+ *****************************************************************************/
 
 void ResetSource_displayResetSource(void)
 {
