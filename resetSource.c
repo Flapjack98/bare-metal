@@ -29,7 +29,7 @@ static ResetEvent ResetEventInfo[] = {
     {5, "External Warm"},
     {4, "Watchdog Timer"},
     {1, "GLobal Warm Software"},
-    {0, "Powen-on (cold)"}
+    {0, "Power-on (cold)"}
 };
 
 static void ResetSource_clearResetEventBit(int resetEventBit)

@@ -1,3 +1,5 @@
 /.vscode
 /Debug
 UBootCommand.txt
+
+*.o
