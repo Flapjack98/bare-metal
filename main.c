@@ -1,105 +1,104 @@
-/**
- * Simple UART demo.
- */
+// Fake Typing bare metal sample application
+// On the serial port, fakes
 
-#include "uart_irda_cir.h"
-#include "soc_AM335x.h"
-#include "beaglebone.h"
 #include "consoleUtils.h"
-#include "hw_types.h"
-#include "dmtimer.h"
+#include <stdint.h>
+
+// My hardware abstraction modules
+#include "serial.h"
 #include "timer.h"
-//#include "watchdog.h"
+#include "wdtimer.h"
+
+// My application's modules
+#include "joystick.h"
+#include "led.h"
 
 /******************************************************************************
- **              INTERNAL MACRO DEFINITIONS
+ **              INTERNAL CONSTANT DEFINITIONS
  ******************************************************************************/
-static const unsigned int BAUD_RATE_115200 = 115200;
-static const unsigned int UART_MODULE_INPUT_CLK = 48000000;
-static const unsigned int TIMER_PERIOD_MILLISECONDS = 10;
-
-/******************************************************************************
- **              INTERNAL FUNCTION PROTOTYPES
- ******************************************************************************/
-static void UartInitialize(void);
-static void UartBaudRateSet(void);
-
+static const int TIMER_PERIOD_MILLISECONDS = 10;
 
 /******************************************************************************
  **              GLOBAL VARIABLE DEFINITIONS
  ******************************************************************************/
 
 /******************************************************************************
- **              FUNCTION DEFINITIONS
+ **              Functions
  ******************************************************************************/
 
-int main()
+void displayHelpMenu()
 {
-	unsigned long counter = 0;
+    ConsoleUtilsPrintf(
+		"Commands:\n \
+		  ?   : Display this help message\n \
+		  0-9 : Set speed 0 (slow) to 9 (fast)\n \
+		  x   : Stop hitting the watchdog\n \
+		  JOY : Up (faster), Down (slower)\n" \
+	);
+}
 
-	UartInitialize();
-	Timer_init(TIMER_PERIOD_MILLISECONDS);
 
-	ConsoleUtilsPrintf("Demo bare metal UART application\n");
-	ConsoleUtilsPrintf("All this application does is print this message and some\n");
-	ConsoleUtilsPrintf("more lines while runing.\n");
-	ConsoleUtilsPrintf("Note: This may reset in about 45seconds... why?\n");
 
-	while(1) {
-		counter++;
-		if (counter % 10000000 == 0) {
-			ConsoleUtilsPrintf("Count = %u\n", counter);
+/******************************************************************************
+ **              SERIAL PORT HANDLING
+ ******************************************************************************/
+static volatile uint8_t s_rxByte = 0;
+static void serialRxIsrCallback(uint8_t rxByte) {
+	s_rxByte = rxByte;
+}
 
-			// Hit the watchdog (must #include "watchdog.h"
-			// Each time you hit the WD, must pass it a different number
-			// than the last time you hit it.
-			WatchdogTimerTriggerSet(SOC_WDT_1_REGS, counter);
+static void doBackgroundSerialWork(void)
+{
+	if (s_rxByte != 0) {
+		if (s_rxByte == '?') {
+			displayHelpMenu();
+		} else if (s_rxByte >= '0' && s_rxByte <= '9'){
+			Led_setSpeed(s_rxByte);
+		} else if (s_rxByte == 'x') {
+			Watchdog_stopHit();
+		} else {
+			ConsoleUtilsPrintf("\nMust enter valid command\n");
+			displayHelpMenu();
 		}
+
+		s_rxByte = 0;
 	}
 }
 
-
-
-static void UartInitialize()
+/******************************************************************************
+ **              MAIN
+ ******************************************************************************/
+int main(void)
 {
-	/* Configuring the system clocks for UART0 instance. */
-	UART0ModuleClkConfig();
-	/* Performing the Pin Multiplexing for UART0 instance. */
-	UARTPinMuxSetup(0);
-	/* Performing a module reset. */
-	UARTModuleReset(SOC_UART_0_REGS);
-	/* Performing Baud Rate settings. */
-	UartBaudRateSet();
-	/* Switching to Configuration Mode B. */
-	UARTRegConfigModeEnable(SOC_UART_0_REGS, UART_REG_CONFIG_MODE_B);
-	/* Programming the Line Characteristics. */
-	UARTLineCharacConfig(SOC_UART_0_REGS,
-			(UART_FRAME_WORD_LENGTH_8 | UART_FRAME_NUM_STB_1),
-			UART_PARITY_NONE);
-	/* Disabling write access to Divisor Latches. */
-	UARTDivisorLatchDisable(SOC_UART_0_REGS);
-	/* Disabling Break Control. */
-	UARTBreakCtl(SOC_UART_0_REGS, UART_BREAK_COND_DISABLE);
-	/* Switching to UART16x operating mode. */
-	UARTOperatingModeSelect(SOC_UART_0_REGS, UART16x_OPER_MODE);
-	/* Select the console type based on compile time check */
-	ConsoleUtilsSetType(CONSOLE_UART);
-}
 
+	// Initialization
+	Serial_init(serialRxIsrCallback);
+	Timer_init(TIMER_PERIOD_MILLISECONDS);
+	Watchdog_init();
+	FakeTyper_init();
 
-/*
- ** A wrapper function performing Baud Rate settings.
- */
-static void UartBaudRateSet(void)
-{
-	unsigned int divisorValue = 0;
+	// Setup callbacks from hardware abstraction modules to application:
+	Serial_setRxIsrCallback(serialRxIsrCallback);
+	Timer_setTimerIsrCallback(Led_notifyOnTimeIsr);
 
-	/* Computing the Divisor Value. */
-	divisorValue = UARTDivisorValCompute(UART_MODULE_INPUT_CLK,
-			BAUD_RATE_115200,
-			UART16x_OPER_MODE,
-			UART_MIR_OVERSAMPLING_RATE_42);
+	// Display welcome message
+	ConsoleUtilsPrintf("\nLightBouncer:\n");
+	ConsoleUtilsPrintf("   by Catherine and Noel\n");
+	ConsoleUtilsPrintf("------------------------\n");
+	// Display reset sources
+	char *resetSource = readFromResetSource();
 
-	/* Programming the Divisor Latches. */
-	UARTDivisorLatchWrite(SOC_UART_0_REGS, divisorValue);
+	// Main loop:
+	while(1) {
+		// Handle background processing
+		doBackgroundSerialWork();
+		Led_doBackgroundWork();
+		Joystick_doBackgroundWork();
+
+		// Timer ISR signals intermittent background activity.
+		if(Timer_isIsrFlagSet()) {
+			Timer_clearIsrFlag();
+			Watchdog_hit();
+		}
+	}
 }
