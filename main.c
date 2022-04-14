@@ -7,13 +7,16 @@
 #include "beaglebone.h"
 #include "consoleUtils.h"
 #include "hw_types.h"
+#include "dmtimer.h"
+#include "timer.h"
 //#include "watchdog.h"
 
 /******************************************************************************
  **              INTERNAL MACRO DEFINITIONS
  ******************************************************************************/
-#define BAUD_RATE_115200          (115200)
-#define UART_MODULE_INPUT_CLK     (48000000)
+static const unsigned int BAUD_RATE_115200 = 115200;
+static const unsigned int UART_MODULE_INPUT_CLK = 48000000;
+static const unsigned int TIMER_PERIOD_MILLISECONDS = 10;
 
 /******************************************************************************
  **              INTERNAL FUNCTION PROTOTYPES
@@ -35,6 +38,7 @@ int main()
 	unsigned long counter = 0;
 
 	UartInitialize();
+	Timer_init(TIMER_PERIOD_MILLISECONDS);
 
 	ConsoleUtilsPrintf("Demo bare metal UART application\n");
 	ConsoleUtilsPrintf("All this application does is print this message and some\n");
