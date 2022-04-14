@@ -5,8 +5,6 @@
 #ifndef SERIAL_HANDLER_H
 #define SERIAL_HANDLER_H
 
-#include "led.h"
-#include "watchdog.h"
 #include <stdint.h>
 void SerialHandler_notifyOnSerialRxIsr(uint8_t rxByte);
 void SerialHandler_doBackgroundWork(void);

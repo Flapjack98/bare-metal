@@ -7,7 +7,7 @@
 
 // My application's modules
 #include "joystick.h"
-#include "led.h"
+#include "ledFlasher.h"
 #include "serialHandler.h"
 #include "resetSource.h"
 
@@ -21,12 +21,13 @@ int main(void)
 
 	// Initialization
 	Serial_init();
-	Timer_init(TIMER_PERIOD_MILLISECONDS);
+	LedFlasher_init();
 	Watchdog_init();
+	Timer_init(TIMER_PERIOD_MILLISECONDS);
 
 	// Setup callbacks from hardware abstraction modules to application:
 	Serial_setRxIsrCallback(SerialHandler_notifyOnSerialRxIsr);
-	Timer_setTimerIsrCallback(Led_notifyOnTimeIsr);
+	Timer_setTimerIsrCallback(LedFlasher_notifyOnTimeIsr);
 
 	// Display welcome message
 	ConsoleUtilsPrintf("\nLightBouncer:\n");
@@ -40,7 +41,7 @@ int main(void)
 	while(1) {
 		// Handle background processing
 		SerialHandler_doBackgroundWork();
-		Led_doBackgroundWork();
+		LedFlasher_doBackgroundWork();
 		Joystick_doBackgroundWork();
 
 		// Timer ISR signals intermittent background activity.

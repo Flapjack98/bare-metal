@@ -1,43 +1,55 @@
-// led.c
 #include "led.h"
-#include "consoleUtils.h"
-#include <stdbool.h>
-/******************************************************************************
- **              Variables
- ******************************************************************************/
-static volatile _Bool s_isTimeToChangeSpeed = false;
-static const char *s_speed = 0;
+#include "soc_AM335x.h"
+#include "beaglebone.h"
+#include "gpio_v2.h"
+#include "hw_types.h"      // For HWREG(...) macro
 
+/*****************************************************************************
+ **                INTERNAL CONSTANTS
+ *****************************************************************************/
+static const unsigned int LED_GPIO_BASE = SOC_GPIO_1_REGS;
 
-/******************************************************************************
- **              Public functions
- ******************************************************************************/
+/*****************************************************************************
+ **                PUBLIC FLASHING FUNCTIONS
+ *****************************************************************************/
+
 void Led_init(void)
 {
-	// Often would have something to do here in other modules,
-	// so included here as just a sample.
+    /* Enabling functional clocks for GPIO1 instance. */
+	GPIO1ModuleClkConfig();
+
+	/* Selecting GPIO1[23] pin for use. */
+	//GPIO1Pin23PinMuxSetup();
+
+	/* Enabling the GPIO module. */
+	GPIOModuleEnable(LED_GPIO_BASE);
+
+	/* Resetting the GPIO module. */
+	GPIOModuleReset(LED_GPIO_BASE);
+
+	/* Setting the GPIO pin as an output pin. */
+	GPIODirModeSet(LED_GPIO_BASE,
+			LED0_PIN,
+			GPIO_DIR_OUTPUT);
+	GPIODirModeSet(LED_GPIO_BASE,
+			LED1_PIN,
+			GPIO_DIR_OUTPUT);
+	GPIODirModeSet(LED_GPIO_BASE,
+			LED2_PIN,
+			GPIO_DIR_OUTPUT);
+	GPIODirModeSet(LED_GPIO_BASE,
+			LED3_PIN,
+			GPIO_DIR_OUTPUT);
 }
 
-void Led_setSpeed(const char *newSpeed)
+void Led_unflashLed(Led_eLedNum ledPosition)
 {
-	s_speed = newSpeed;
+	/* Driving a logic Low on the GPIO pin. */
+	GPIOPinWrite(LED_GPIO_BASE, ledPosition, GPIO_PIN_LOW);
 }
 
-void Led_notifyOnTimeIsr(void)
+void Led_flashLed(Led_eLedNum ledPosition)
 {
-	s_isTimeToChangeSpeed = true;
+	/* Driving a logic HIGH on the GPIO pin. */
+	GPIOPinWrite(LED_GPIO_BASE, ledPosition, GPIO_PIN_HIGH);
 }
-
-void Led_doBackgroundWork(void)
-{
-	if (s_isTimeToChangeSpeed) {
-		s_isTimeToChangeSpeed = false;
-
-		// Do we have a message, and not at its end?
-		if (s_speed && *s_speed) {
-			ConsoleUtilsPutChar(*s_speed);
-			s_speed++;
-		}
-	}
-}
-
