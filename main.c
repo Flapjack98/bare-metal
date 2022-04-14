@@ -9,15 +9,13 @@
 #include "joystick.h"
 #include "led.h"
 #include "serialHandler.h"
+#include "resetSource.h"
 
 /******************************************************************************
  **              INTERNAL CONSTANT DEFINITIONS
  ******************************************************************************/
 static const unsigned int TIMER_PERIOD_MILLISECONDS = 10;
 
-/******************************************************************************
- **              MAIN
- ******************************************************************************/
 int main(void)
 {
 
@@ -34,8 +32,9 @@ int main(void)
 	ConsoleUtilsPrintf("\nLightBouncer:\n");
 	ConsoleUtilsPrintf("   by Catherine and Noel\n");
 	ConsoleUtilsPrintf("------------------------\n");
+	
 	// Display reset sources
-	//char *resetSource = readFromResetSource();
+	ResetSource_displayResetSource();
 
 	// Main loop:
 	while(1) {

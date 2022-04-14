@@ -3,7 +3,7 @@
  * serial module. */
 
 #include "led.h"
-#include "watchdog.h"
+#include "wdtimer.h"
 #include <stdint.h>
 
 /******************************************************************************
