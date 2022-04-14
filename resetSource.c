@@ -1,17 +1,19 @@
+#include "consoleUtils.h"
 #include "resetSource.h"
 #include "soc_AM335x.h"
 #include "beaglebone.h"
 #include "gpio_v2.h"
 #include "hw_types.h"
 #include "wdtimer.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 /*****************************************************************************
  **                Static Constants
  *****************************************************************************/
 static const unsigned int REGISTERS_BASE_ADDRESS = (0x44E00F00);
 static const unsigned int RESET_SOURCE_OFFSET = (0x8);
-static const unsigned int RESET_SOURCE_REGISTER_ADDRESS = 
-(REGISTERS_BASE_ADDRESS + RESET_SOURCE_OFFSET);
+static const unsigned int RESET_SOURCE_REGISTER_ADDRESS = (0x44E00F08); // (REGISTERS_BASE_ADDRESS + RESET_SOURCE_OFFSET)
 
 static const int MAX_BUFFER_SIZE = 1024;
 static const int NUMBER_RESET_EVENT_TYPES = 5;
@@ -28,27 +30,29 @@ static ResetEvent ResetEventInfo[] = {
     {4, "Watchdog Timer"},
     {1, "GLobal Warm Software"},
     {0, "Powen-on (cold)"}
-}
+};
 
 static void ResetSource_clearResetEventBit(int resetEventBit)
 {
-    
+    int resetEventMask = (1<<resetEventBit);
+    HWREG(RESET_SOURCE_REGISTER_ADDRESS) |= resetEventMask;
 }
 
 static char *ResetSource_readFromResetSource(void)
 {
-    char resetSourceListString[MAX_BUFFER_SIZE];
-    for (int i = 0; i <= NUMBER_RESET_EVENT_TYPES; i++){
+    int i;
+    char *resetSourceListString = malloc(sizeof(char)*MAX_BUFFER_SIZE);
+    for (i = 0; i <= NUMBER_RESET_EVENT_TYPES; i++){
         // Get the pin
         int resetEventMask = (1<<ResetEventInfo[i].bit);
         // Apply the mask
-        int result = HWREG(REGISTERS_BASE_ADDRESS + RESET_SOURCE_OFFSET) |= resetEventMask;
         // Check to see if bit is 1
-        if (result) {
+        int result = HWREG(RESET_SOURCE_REGISTER_ADDRESS) & (resetEventMask);
+        if (result) { // if result > 0 that means that a reset has occured
             // Make a string of of the resets found
-            char resetEventType = ResetEventInfo[i].resetEventType;
-            strcat(resetSourceListString, source);
-            strcat(resetSourceListString, ", ");
+            char *lastResetSourceListString = resetSourceListString;
+            char *resetEventType = ResetEventInfo[i].resetEventType;
+            snprintf(resetSourceListString, MAX_BUFFER_SIZE, "%s, %s", lastResetSourceListString, resetEventType);
         }
         ResetSource_clearResetEventBit(ResetEventInfo[i].bit);
     }
@@ -59,4 +63,6 @@ static char *ResetSource_readFromResetSource(void)
 void ResetSource_displayResetSource(void)
 {
 	char *resetSource = ResetSource_readFromResetSource();
+    ConsoleUtilsPrintf("\n%s\n", resetSource);
+    free(resetSource);
 }
