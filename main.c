@@ -29,7 +29,7 @@ static const int TIMER_PERIOD_MILLISECONDS = 10;
 void displayHelpMenu()
 {
     ConsoleUtilsPrintf(
-		"Commands:\n \
+		"\nCommands:\n \
 		  ?   : Display this help message\n \
 		  0-9 : Set speed 0 (slow) to 9 (fast)\n \
 		  x   : Stop hitting the watchdog\n \
@@ -55,7 +55,7 @@ static void doBackgroundSerialWork(void)
 		} else if (s_rxByte >= '0' && s_rxByte <= '9'){
 			Led_setSpeed(s_rxByte);
 		} else if (s_rxByte == 'x') {
-			//Watchdog_stopHit();
+			Watchdog_stopHitting();
 		} else {
 			ConsoleUtilsPrintf("\nMust enter valid command\n");
 			displayHelpMenu();
@@ -97,7 +97,11 @@ int main(void)
 		// Timer ISR signals intermittent background activity.
 		if(Timer_isIsrFlagSet()) {
 			Timer_clearIsrFlag();
-			Watchdog_hit();
+
+			// Hit watchdog every timer period (10ms) and if 'x' wasn't typed.
+			if (Watchdog_shouldHit()) {
+				Watchdog_hit();
+			}
 		}
 	}
 }
