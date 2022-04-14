@@ -1,8 +1,4 @@
-// Fake Typing bare metal sample application
-// On the serial port, fakes
-
 #include "consoleUtils.h"
-#include <stdint.h>
 
 // My hardware abstraction modules
 #include "serial.h"
@@ -12,58 +8,12 @@
 // My application's modules
 #include "joystick.h"
 #include "led.h"
+#include "serialHandler.h"
 
 /******************************************************************************
  **              INTERNAL CONSTANT DEFINITIONS
  ******************************************************************************/
-static const int TIMER_PERIOD_MILLISECONDS = 10;
-
-/******************************************************************************
- **              GLOBAL VARIABLE DEFINITIONS
- ******************************************************************************/
-
-/******************************************************************************
- **              Functions
- ******************************************************************************/
-
-void displayHelpMenu()
-{
-    ConsoleUtilsPrintf(
-		"\nCommands:\n \
-		  ?   : Display this help message\n \
-		  0-9 : Set speed 0 (slow) to 9 (fast)\n \
-		  x   : Stop hitting the watchdog\n \
-		  JOY : Up (faster), Down (slower)\n" \
-	);
-}
-
-
-
-/******************************************************************************
- **              SERIAL PORT HANDLING
- ******************************************************************************/
-static volatile uint8_t s_rxByte = 0;
-static void serialRxIsrCallback(uint8_t rxByte) {
-	s_rxByte = rxByte;
-}
-
-static void doBackgroundSerialWork(void)
-{
-	if (s_rxByte != 0) {
-		if (s_rxByte == '?') {
-			displayHelpMenu();
-		} else if (s_rxByte >= '0' && s_rxByte <= '9'){
-			Led_setSpeed(s_rxByte);
-		} else if (s_rxByte == 'x') {
-			Watchdog_stopHitting();
-		} else {
-			ConsoleUtilsPrintf("\nMust enter valid command\n");
-			displayHelpMenu();
-		}
-
-		s_rxByte = 0;
-	}
-}
+static const unsigned int TIMER_PERIOD_MILLISECONDS = 10;
 
 /******************************************************************************
  **              MAIN
@@ -72,12 +22,12 @@ int main(void)
 {
 
 	// Initialization
-	Serial_init(serialRxIsrCallback);
+	Serial_init();
 	Timer_init(TIMER_PERIOD_MILLISECONDS);
 	Watchdog_init();
 
 	// Setup callbacks from hardware abstraction modules to application:
-	Serial_setRxIsrCallback(serialRxIsrCallback);
+	Serial_setRxIsrCallback(SerialHandler_notifyOnSerialRxIsr);
 	Timer_setTimerIsrCallback(Led_notifyOnTimeIsr);
 
 	// Display welcome message
@@ -90,7 +40,7 @@ int main(void)
 	// Main loop:
 	while(1) {
 		// Handle background processing
-		doBackgroundSerialWork();
+		SerialHandler_doBackgroundWork();
 		Led_doBackgroundWork();
 		Joystick_doBackgroundWork();
 
